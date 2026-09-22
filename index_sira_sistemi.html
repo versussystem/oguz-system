@@ -1,0 +1,586 @@
+﻿```html
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>6/C - Oğuz Programlama</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: white;
+        color: black;
+        text-align: center;
+    }
+
+    .baslik {
+        font-size: 42px;
+        font-weight: bold;
+        margin-top: 25px;
+    }
+
+    .kutu {
+        width: 92%;
+        max-width: 650px;
+        margin: 25px auto;
+        border: 2px solid black;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    input {
+        width: 90%;
+        padding: 12px;
+        margin: 6px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    button {
+        padding: 11px 22px;
+        margin: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        background: white;
+        color: black;
+        border: 2px solid black;
+    }
+
+    button:hover {
+        background: black;
+        color: white;
+    }
+
+    #liste {
+        margin-top: 15px;
+        text-align: left;
+    }
+
+    .ogrenci {
+        padding: 11px;
+        border-bottom: 1px solid #aaa;
+        font-size: 19px;
+    }
+
+    .aktif {
+        font-weight: bold;
+        background: #eeeeee;
+    }
+
+    .gizli {
+        display: none;
+    }
+
+    #durum {
+        margin: 15px;
+        font-size: 18px;
+    }
+
+    .alt {
+        margin-top: 50px;
+        padding: 20px;
+        border-top: 1px solid black;
+    }
+
+    .yonetim {
+        border-top: 1px solid #aaa;
+        margin-top: 25px;
+        padding-top: 20px;
+    }
+
+    .sil {
+        float: right;
+        padding: 5px 10px;
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .sayac {
+        font-size: 16px;
+        margin: 10px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="baslik">6/C</div>
+
+<!-- ŞİFRE -->
+<div id="sifreEkrani" class="kutu">
+
+    <h2>Siteye Giriş</h2>
+
+    <input
+        type="password"
+        id="sifre"
+        placeholder="Şifre"
+        onkeydown="if(event.key==='Enter') giris()"
+    >
+
+    <br>
+
+    <button onclick="giris()">GİRİŞ</button>
+
+    <p id="sifreHata"></p>
+
+</div>
+
+
+<!-- ANA SİSTEM -->
+<div id="anaSistem" class="kutu gizli">
+
+    <h2>Öğrenci Sıra Sistemi</h2>
+
+    <div id="durum">
+        Sistem kapalı
+    </div>
+
+    <div class="sayac" id="siradakiYazi">
+        Sıradaki: -
+    </div>
+
+    <button onclick="baslat()">BAŞLAT</button>
+    <button onclick="durdur()">DURDUR</button>
+
+    <hr>
+
+    <h3>Öğrenci Listesi</h3>
+
+    <div id="liste"></div>
+
+
+    <!-- ÖĞRENCİ EKLEME -->
+    <div class="yonetim">
+
+        <h3>Öğrenci Ekle</h3>
+
+        <input
+            type="text"
+            id="yeniOgrenci"
+            placeholder="Öğrenci adı"
+            onkeydown="if(event.key==='Enter') ogrenciEkle()"
+        >
+
+        <br>
+
+        <button onclick="ogrenciEkle()">
+            ÖĞRENCİ EKLE
+        </button>
+
+    </div>
+
+</div>
+
+
+<div class="alt">
+    Oğuz Programlama
+</div>
+
+
+<script>
+
+// =====================================
+// ŞİFRE
+// =====================================
+
+const SIFRE = "6ceniyisi";
+
+
+// =====================================
+// İLK ÖĞRENCİ LİSTESİ
+// =====================================
+
+let ogrenciler = [
+
+    "Ceren",
+    "Nihat",
+    "Elvan",
+    "Gülbanu",
+    "Kerem-Musab",
+    "Zümral",
+    "Ömer",
+    "Eylül",
+    "Mehmet",
+    "Ali",
+    "Ayşe",
+    "Emir",
+    "Mahmut",
+    "İlyas-Efe",
+    "İpek",
+    "Eyüphan",
+    "Damla",
+    "Nehir",
+    "Oğuz",
+    "Yusuf (Anıl)",
+    "Gülen",
+    "Eren",
+    "Buğlem",
+    "Yusuf (Aslan)",
+    "Kerem-Kurt",
+    "Melike",
+    "Esma",
+    "Kamil",
+    "Suna",
+    "Yiğit",
+    "Veli",
+    "İkra",
+    "Mahir",
+    "Bilal",
+    "Muhammet",
+    "Mustafa",
+    "Irmak"
+
+];
+
+
+// =====================================
+// KAYDEDİLEN LİSTE VARSA ONU KULLAN
+// =====================================
+
+let kayitliListe =
+    localStorage.getItem("6C_ogrenciler");
+
+if (kayitliListe) {
+
+    try {
+
+        ogrenciler = JSON.parse(kayitliListe);
+
+    } catch (e) {
+
+        console.log("Liste okunamadı.");
+
+    }
+
+}
+
+
+// =====================================
+// DEĞİŞKENLER
+// =====================================
+
+let calisiyor = false;
+let siradaki = 0;
+let zamanlayici = null;
+
+// Her 2 haftada bir bütün öğrencilerin sıra numarası 1 artar.
+// 0 = Ceren 1, Nihat 2, ... Irmak 37
+let siraKaymasi =
+    Number(localStorage.getItem("6C_siraKaymasi") || 0);
+
+
+// =====================================
+// GİRİŞ
+// =====================================
+
+function giris() {
+
+    const girilen =
+        document.getElementById("sifre").value;
+
+    if (girilen === SIFRE) {
+
+        document
+            .getElementById("sifreEkrani")
+            .classList.add("gizli");
+
+        document
+            .getElementById("anaSistem")
+            .classList.remove("gizli");
+
+        listeyiGoster();
+
+    } else {
+
+        document.getElementById("sifreHata").innerText =
+            "Şifre yanlış!";
+
+    }
+}
+
+
+// =====================================
+// LİSTEYİ GÖSTER
+// =====================================
+
+function listeyiGoster() {
+
+    const liste =
+        document.getElementById("liste");
+
+    liste.innerHTML = "";
+
+    ogrenciler.forEach(function(isim, index) {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "ogrenci";
+
+        div.id = "ogrenci-" + index;
+
+        // Sıra numarası:
+        // İlk hafta: Ceren=1, Nihat=2, ... Irmak=37
+        // Her 2 haftada bir herkes 1 sıra ileri gider.
+        const numara =
+            ((index + siraKaymasi) % ogrenciler.length) + 1;
+
+        div.innerHTML =
+            numara +
+            " - " +
+            isim +
+            '<button class="sil" onclick="ogrenciSil(' +
+            index +
+            ')">SİL</button>';
+
+        liste.appendChild(div);
+
+    });
+
+    siradakiGoster();
+
+}
+
+
+// =====================================
+// ÖĞRENCİ EKLE
+// =====================================
+
+function ogrenciEkle() {
+
+    const kutu =
+        document.getElementById("yeniOgrenci");
+
+    const isim =
+        kutu.value.trim();
+
+    if (isim === "") {
+
+        alert("Öğrenci adı yaz!");
+
+        return;
+    }
+
+    ogrenciler.push(isim);
+
+    listeyiKaydet();
+
+    kutu.value = "";
+
+    listeyiGoster();
+
+}
+
+
+// =====================================
+// ÖĞRENCİ SİL
+// =====================================
+
+function ogrenciSil(index) {
+
+    const isim = ogrenciler[index];
+
+    const onay =
+        confirm(
+            isim +
+            " adlı öğrenciyi silmek istiyor musun?"
+        );
+
+    if (!onay) {
+        return;
+    }
+
+    ogrenciler.splice(index, 1);
+
+    if (siradaki >= ogrenciler.length) {
+        siradaki = 0;
+    }
+
+    listeyiKaydet();
+
+    listeyiGoster();
+
+}
+
+
+// =====================================
+// LİSTEYİ TARAYICIYA KAYDET
+// =====================================
+
+function listeyiKaydet() {
+
+    localStorage.setItem(
+        "6C_ogrenciler",
+        JSON.stringify(ogrenciler)
+    );
+
+}
+
+
+// =====================================
+// BAŞLAT
+// =====================================
+
+function baslat() {
+
+    if (ogrenciler.length === 0) {
+
+        alert("Listede öğrenci yok!");
+
+        return;
+    }
+
+    if (calisiyor) {
+        return;
+    }
+
+    calisiyor = true;
+
+    document.getElementById("durum").innerText =
+        "Sistem çalışıyor";
+
+    siradakiGoster();
+
+    zamanlayici =
+        setInterval(function() {
+
+            siradaki++;
+
+            if (siradaki >= ogrenciler.length) {
+
+                siradaki = 0;
+
+            }
+
+            siradakiGoster();
+
+        }, 2000);
+
+}
+
+
+// =====================================
+// DURDUR
+// =====================================
+
+function durdur() {
+
+    calisiyor = false;
+
+    clearInterval(zamanlayici);
+
+    document.getElementById("durum").innerText =
+        "Sistem kapalı";
+
+}
+
+
+// =====================================
+// SIRADAKİ ÖĞRENCİ
+// =====================================
+
+function siradakiGoster() {
+
+    document.querySelectorAll(".ogrenci")
+        .forEach(function(element) {
+
+            element.classList.remove("aktif");
+
+        });
+
+
+    if (ogrenciler.length === 0) {
+
+        document.getElementById("siradakiYazi").innerText =
+            "Sıradaki: -";
+
+        return;
+    }
+
+
+    const aktif =
+        document.getElementById(
+            "ogrenci-" + siradaki
+        );
+
+    if (aktif) {
+
+        aktif.classList.add("aktif");
+
+    }
+
+
+    // O öğrencinin o anki gerçek sıra numarası
+    const aktifNumara =
+        ((siradaki + siraKaymasi) % ogrenciler.length) + 1;
+
+    document.getElementById("siradakiYazi").innerText =
+        "Sıradaki: " +
+        aktifNumara +
+        " - " +
+        ogrenciler[siradaki];
+
+}
+
+
+// =====================================
+// 2 HAFTALIK SİSTEM
+// =====================================
+
+const ikiHafta =
+    14 * 24 * 60 * 60 * 1000;
+
+let sonYenileme =
+    localStorage.getItem("6C_sonYenileme");
+
+
+if (!sonYenileme) {
+
+    localStorage.setItem(
+        "6C_sonYenileme",
+        Date.now()
+    );
+
+} else {
+
+    const fark =
+        Date.now() - Number(sonYenileme);
+
+    if (fark >= ikiHafta) {
+
+        // Her 2 haftada herkesin sıra numarası 1 artar.
+        // Örnek:
+        // Ceren 1 -> 2
+        // Nihat 2 -> 3
+        // ...
+        // Irmak 37 -> 1
+
+        if (ogrenciler.length > 0) {
+
+            siraKaymasi =
+                (siraKaymasi + 1) % ogrenciler.length;
+
+            localStorage.setItem(
+                "6C_siraKaymasi",
+                siraKaymasi
+            );
+
+        }
+
+        localStorage.setItem(
+            "6C_sonYenileme",
+            Date.now()
+        );
+
+    }
+
+}
+</script>
+
+</body>
+</html>
+```
