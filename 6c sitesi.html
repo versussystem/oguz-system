@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>6/C • Oğuz Programlama</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#07111f,#102a43);color:#eef6ff}
+header{padding:22px 5%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #29445d;background:#081522}
+.logo{font-size:34px;font-weight:800}.logo span{color:#43c6ff}
+.clock{font-weight:bold;color:#9edfff}
+main{width:94%;max-width:1100px;margin:24px auto}
+.card{background:#0d1e2e;border:1px solid #29445d;border-radius:18px;padding:20px;margin-bottom:18px;box-shadow:0 10px 30px #0005}
+h2,h3{margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+button{border:0;border-radius:10px;padding:11px 16px;margin:4px;background:#1689c9;color:white;font-weight:bold;cursor:pointer}
+button:hover{filter:brightness(1.15)}button.danger{background:#c94343}button.gray{background:#405568}
+input,select{width:100%;padding:11px;border-radius:9px;border:1px solid #3c5a70;background:#071522;color:white;margin:5px 0 10px}
+.hidden{display:none!important}.muted{color:#9bb1c4}.status{font-size:20px;font-weight:bold;color:#69d6ff}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #29445d;text-align:left}th{color:#77d9ff}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+.student{padding:13px;border:1px solid #29445d;border-radius:12px;margin:8px 0;background:#10283b}
+.number{font-size:23px;font-weight:bold;color:#62d4ff}.actions button{padding:7px 10px}
+.lesson{padding:11px;border-radius:10px;background:#10283b;margin:7px 0}.lesson.active{border:2px solid #42d3ff;background:#123b55}.lesson.current{box-shadow:0 0 0 2px #42d3ff,0 0 18px #42d3ff55;position:relative}.current-label{float:right;color:#70ddff;font-weight:bold}
+.book{padding:12px;border:1px solid #29445d;border-radius:12px;margin:8px 0}
+.small{font-size:13px}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#17445d;color:#9ee7ff}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">6/C <span>• Oğuz Programlama</span></div>
+  <div class="row" style="justify-content:flex-end;flex:0 0 auto">
+    <button onclick="window.open('https://eltarena.com/','_blank')">ELTYE GİT</button>
+    <button onclick="window.open('https://sumeyyeogultekin.com/','_blank')">SÜMEYYEYE GİT</button>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<main>
+<section id="login" class="card" style="max-width:480px;margin:40px auto">
+  <h2>🔐 6/C Ortak Sistem</h2>
+  <p class="muted">Giriş yaptıktan sonra ortak sunucudaki bilgiler görünür.</p>
+  <input id="email" type="email" placeholder="E-posta">
+  <input id="password" type="password" placeholder="Şifre" onkeydown="if(event.key==='Enter')login()">
+  <button onclick="login()">GİRİŞ YAP</button>
+  <p id="loginError"></p>
+</section>
+
+<section id="app" class="hidden">
+  <div class="grid">
+    <div class="card">
+      <h2>📚 Ders Programı</h2>
+      <div id="lessonStatus" class="status">Saat hesaplanıyor...</div>
+      <div id="lessons"></div>
+    </div>
+    <div class="card">
+      <h2>🔢 Sıra Kontrolü</h2>
+      <p class="muted">Otomatik 2 haftalık kaydırma kaldırıldı. Sıra artık sunucuda manuel değişir.</p>
+      <button onclick="advanceAll()">SIRA ATLAT</button>
+      <button class="gray" onclick="loadAll()">YENİLE</button>
+      <p id="actionStatus"></p>
+      <hr>
+      <h3>Tek Tek Sıra Değiştir</h3>
+      <div id="students"></div>
+      <hr>
+      <h3>Öğrenci Ekle</h3>
+      <input id="newStudent" placeholder="Öğrenci adı">
+      <button onclick="addStudent()">ÖĞRENCİ EKLE</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <h2 style="flex:2">📖 Kitap Listesi</h2>
+      <button onclick="showBooksPage()">OKUNAN KİTAPLAR SAYFASI</button>
+    </div>
+    <p class="muted">Her öğrencinin okuduğu kitaplar burada sunucuda ortak tutulur.</p>
+    <div class="row">
+      <input id="bookName" placeholder="Kitap adı">
+      <input id="bookPages" type="number" min="0" placeholder="Sayfa sayısı">
+      <select id="bookStudent"><option>Öğrenciler yükleniyor...</option></select>
+      <button onclick="addBook()">KİTAP EKLE</button>
+    </div>
+    <div id="books"></div>
+  </div>
+
+  <div class="card">
+    <h3>🕘 Ders / Teneffüs Saatleri</h3>
+    <p class="muted">Saatler yerel bilgisayar saatine göre otomatik gösterilir.</p>
+    <div id="schedule"></div>
+  </div>
+</section>
+
+<section id="historyPage" class="hidden">
+  <div class="card">
+    <button onclick="showMain()">← ANA SAYFA</button>
+    <h2>📚 Herkesin Okuduğu Kitaplar</h2>
+    <p class="muted">Liste ortak sunucudan gelir; farklı bilgisayarlarda da aynı görünür.</p>
+    <div id="history"></div>
+  </div>
+</section>
+
+<footer style="text-align:center;padding:25px;color:#86a0b5">Oğuz Programlama</footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://aomxtamznulqgnshihwy.supabase.co";
+const SUPABASE_KEY="sb_publishable_QIn06PBaZZUb60YhdIeusQ_gTDJovWm";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let students=[];
+const lessons=[
+["1. Ders","08:30","09:10"],["2. Ders","09:25","10:05"],
+["3. Ders","10:30","11:00"],["4. Ders","11:15","11:55"],
+["5. Ders","12:10","12:50"],["6. Ders","13:25","14:05"],
+["7. Ders","14:15","14:55"],["8. Ders","15:05","15:45"]
+];
+
+function mins(t){let [h,m]=t.split(":").map(Number);return h*60+m}
+function drawLessons(){
+ const box=document.getElementById("lessons"), all=document.getElementById("schedule");
+ box.innerHTML=""; all.innerHTML="";
+ const now=new Date(), n=now.getHours()*60+now.getMinutes();
+ let active=-1, activeType="outside", text="Ders saati dışında";
+
+ lessons.forEach((x,i)=>{
+   if(n>=mins(x[1])&&n<mins(x[2])){
+     active=i; activeType="lesson"; text=x[0]+" • "+x[1]+" - "+x[2];
+   }
+   const next=lessons[i+1];
+   const lessonCurrent=(activeType==="lesson"&&active===i);
+   const el=`<div class="lesson ${lessonCurrent?'active current':''}">
+     <b>${x[0]}</b> • ${x[1]} - ${x[2]} ${lessonCurrent?'<span class="current-label">● ŞU AN DERS</span>':''}
+   </div>`;
+   box.innerHTML+=el;
+
+   all.innerHTML+=el;
+
+   if(next){
+     const recessCurrent=(n>=mins(x[2])&&n<mins(next[1]));
+     if(recessCurrent){ activeType="recess"; text="☕ Teneffüs • "+x[2]+" - "+next[1]; }
+     const recess=`<div class="lesson small ${recessCurrent?'active current':''}">
+       ☕ Teneffüs • ${x[2]} - ${next[1]} ${recessCurrent?'<span class="current-label">● ŞU AN TENEFFÜS</span>':''}
+     </div>`;
+     box.innerHTML+=recess;
+     all.innerHTML+=recess;
+   }
+ });
+ document.getElementById("lessonStatus").textContent=text;
+}
+function clock(){
+ document.getElementById("clock").textContent=new Date().toLocaleTimeString("tr-TR");
+ drawLessons();
+}
+setInterval(clock,1000); clock();
+
+async function login(){
+ const email=document.getElementById("email").value.trim(), password=document.getElementById("password").value;
+ const {error}=await db.auth.signInWithPassword({email,password});
+ if(error){document.getElementById("loginError").textContent="E-posta veya şifre yanlış.";document.getElementById("loginError").style.color="#ff7777";return}
+ document.getElementById("login").classList.add("hidden");
+ document.getElementById("app").classList.remove("hidden");
+ await loadAll();
+}
+async function loadAll(){
+ await loadStudents(); await loadBooks();
+}
+async function loadStudents(){
+ const {data,error}=await db.from("6cogrenciler").select("id,isim,sira").order("sira",{ascending:true}).order("id",{ascending:true});
+ if(error){alert("Öğrenciler alınamadı. Supabase tablo/RLS ayarlarını kontrol et.");console.error(error);return}
+ students=data||[]; renderStudents(); fillStudentSelect();
+}
+function renderStudents(){
+ const box=document.getElementById("students");box.innerHTML="";
+ if(!students.length){box.innerHTML="<p class='muted'>Öğrenci yok.</p>";return}
+ students.forEach(s=>{
+  box.innerHTML+=`<div class="student">
+   <span class="number">${s.sira}</span> — <b>${escapeHtml(s.isim)}</b>
+   <span class="pill" id="count-${s.id}">kitap: ...</span>
+   <div class="actions">
+    <button onclick="changeOne(${s.id},-1)">−1</button>
+    <button onclick="changeOne(${s.id},1)">+1</button>
+    <button class="danger" onclick="deleteStudent(${s.id})">SİL</button>
+   </div>
+  </div>`;
+ });
+}
+function fillStudentSelect(){
+ const sel=document.getElementById("bookStudent");
+ sel.innerHTML=students.map(s=>`<option value="${s.id}">${escapeHtml(s.isim)}</option>`).join("");
+}
+async function advanceAll(){
+ if(!students.length)return;
+ if(!confirm("Tüm öğrencilerin sırasını 1 artırıp son sırayı başa almak istiyor musun?"))return;
+ const max=Math.max(...students.map(s=>Number(s.sira)||0));
+ const updates=students.map(s=>({id:s.id,sira:(Number(s.sira)||0)>=max?1:(Number(s.sira)||0)+1}));
+ for(const u of updates){
+   const {error}=await db.from("6cogrenciler").update({sira:u.sira}).eq("id",u.id);
+   if(error){alert("Sıra güncellenemedi. RLS ayarını kontrol et.");return}
+ }
+ document.getElementById("actionStatus").textContent="Sıra sunucuda başarıyla atlatıldı.";
+ await loadStudents();
+}
+async function changeOne(id,delta){
+ const s=students.find(x=>x.id===id); if(!s)return;
+ const yeni=Math.max(1,(Number(s.sira)||1)+delta);
+ const {error}=await db.from("6cogrenciler").update({sira:yeni}).eq("id",id);
+ if(error){alert("Sıra değiştirilemedi. RLS ayarını kontrol et.");return}
+ await loadStudents();
+}
+async function addStudent(){
+ const isim=document.getElementById("newStudent").value.trim();if(!isim)return;
+ const max=students.length?Math.max(...students.map(s=>Number(s.sira)||0)):0;
+ const {error}=await db.from("6cogrenciler").insert({isim,sira:max+1});
+ if(error){alert("Öğrenci eklenemedi. RLS ayarını kontrol et.");return}
+ document.getElementById("newStudent").value="";await loadStudents();
+}
+async function deleteStudent(id){
+ const s=students.find(x=>x.id===id);if(!s)return;
+ if(!confirm(s.isim+" silinsin mi?"))return;
+ const {error}=await db.from("6cogrenciler").delete().eq("id",id);
+ if(error){alert("Öğrenci silinemedi. RLS ayarını kontrol et.");return}
+ await loadStudents();
+}
+async function loadBooks(){
+ const {data,error}=await db.from("6ckitaplar").select("id,kitap_adi,sayfa,ogrenci_id").order("id",{ascending:false});
+ if(error){document.getElementById("books").innerHTML="<p style='color:#ff7777'>Kitap tablosu bulunamadı. Aşağıdaki SQL'i Supabase'de bir kez çalıştır.</p>";return}
+ const box=document.getElementById("books");box.innerHTML="";
+ (data||[]).forEach(b=>{
+  const s=students.find(x=>x.id===b.ogrenci_id);
+  box.innerHTML+=`<div class="book">📘 <b>${escapeHtml(b.kitap_adi)}</b> • ${Number(b.sayfa)||0} sayfa • <span class="pill">${s?escapeHtml(s.isim):"Bilinmeyen öğrenci"}</span>
+  <button class="danger" style="float:right" onclick="deleteBook(${b.id})">SİL</button></div>`;
+ });
+ const counts={};(data||[]).forEach(b=>counts[b.ogrenci_id]=(counts[b.ogrenci_id]||0)+1);
+ students.forEach(s=>{const el=document.getElementById("count-"+s.id);if(el)el.textContent="kitap: "+(counts[s.id]||0)});
+}
+async function addBook(){
+ const kitap=document.getElementById("bookName").value.trim(), sayfa=Number(document.getElementById("bookPages").value)||0, ogrenci_id=Number(document.getElementById("bookStudent").value);
+ if(!kitap||!ogrenci_id){alert("Kitap adı ve öğrenci seç.");return}
+ const {error}=await db.from("6ckitaplar").insert({kitap_adi:kitap,sayfa,ogrenci_id});
+ if(error){alert("Kitap eklenemedi. 6ckitaplar tablosu/RLS ayarını kontrol et.");console.error(error);return}
+ document.getElementById("bookName").value="";document.getElementById("bookPages").value="";
+ await loadBooks();
+}
+async function deleteBook(id){
+ if(!confirm("Bu kitabı silmek istiyor musun?"))return;
+ const {error}=await db.from("6ckitaplar").delete().eq("id",id);
+ if(error){alert("Kitap silinemedi. RLS ayarını kontrol et.");return} await loadBooks();
+}
+async function showBooksPage(){
+ document.getElementById("app").classList.add("hidden");document.getElementById("historyPage").classList.remove("hidden");
+ const {data,error}=await db.from("6ckitaplar").select("id,kitap_adi,sayfa,ogrenci_id").order("ogrenci_id",{ascending:true}).order("id",{ascending:false});
+ const box=document.getElementById("history");box.innerHTML="";
+ if(error){box.innerHTML="<p>Kitap geçmişi alınamadı.</p>";return}
+ const groups={};(data||[]).forEach(b=>(groups[b.ogrenci_id]??=[]).push(b));
+ students.forEach(s=>{
+  const list=groups[s.id]||[];
+  box.innerHTML+=`<div class="card"><h3>👤 ${escapeHtml(s.isim)} <span class="pill">${list.length} kitap</span></h3>
+   ${list.length?list.map(b=>`<div class="book">📖 ${escapeHtml(b.kitap_adi)} — ${Number(b.sayfa)||0} sayfa</div>`).join(""):"<p class='muted'>Henüz kitap yok.</p>"}</div>`;
+ });
+}
+function showMain(){document.getElementById("historyPage").classList.add("hidden");document.getElementById("app").classList.remove("hidden")}
+function escapeHtml(x){return String(x).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+</script>
+</body>
+</html>
